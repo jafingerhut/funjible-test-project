@@ -14,9 +14,12 @@ FIXME
 (c/foo0 1)
 (require '[funjible-test-project.foo1 :as foo1])
 (foo1/foo1 5)
+(require '[clojure.data :as d])
+(d/diff #{1 3 5} #{2 3})
 (require '[funjible-test-project.set :as s])
 (c/foo0 1)
 (foo1/foo1 5)
+(d/diff #{1 3 5} #{2 3})
 (require '[clojure.set :as cset])
 (cset/difference #{5 7} #{3 5})
 (cset/difference #{5 7})
@@ -46,6 +49,10 @@ nil
 user=> (foo1/foo1 5)
 funjible-test-project.foo1/foo1 calling (clojure.set/difference #{1 2} #{x}) -> #{1 2}
 nil
+user=> (require '[clojure.data :as d])
+nil
+user=> (d/diff #{1 3 5} #{2 3})
+[#{1 5} #{2} #{3}]
 
 ;; As a side effect of this require, not only does the function
 ;; funjible-test-project.set/difference become defined, but the value
@@ -68,6 +75,18 @@ user=> (foo1/foo1 5)
 Called 2-arg version of funjible-test-project.set/difference
 funjible-test-project.foo1/foo1 calling (clojure.set/difference #{1 2} #{x}) -> #{1 2}
 nil
+
+;; clojure.data/diff calls clojure.set/difference when it is used to
+;; compare sets that are different from each other.  Note that the new
+;; version of clojure.set/difference is _not_ being used here, which
+;; we can tell because there is no output about which version of
+;; funjible-test-project.set/difference is being called.  This is
+;; because Clojure is compiled with direct linking enabled, so
+;; changing the value of the var #'clojure.set/difference has no
+;; effect on which function clojure.data/diff calls.
+
+user=> (d/diff #{1 3 5} #{2 3})
+[#{1 5} #{2} #{3}]
 
 ;; Even if we now require clojure.set and call clojure.set/difference,
 ;; its value is different.
