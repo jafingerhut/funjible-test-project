@@ -39,23 +39,22 @@
 ;; Replace clojure.set/difference with the version of difference
 ;; above.
 
-;; The alter-var-root call below is enough to replace the behavior of
-;; clojure.set/difference with that of
-;; funjible-test-project.set/difference.  However, it leaves the
-;; output of the following forms unchanged:
+(defn- update-var-val-and-meta
+  "Given a Var orig-var and another new-var, replace the value of
+  orig-var with that of new-var, using alter-var-root.  Afterwards,
+  any calls made to the function that is the value of orig-var will
+  behave the same as calls to new-var (unless they were compiled with
+  direct linking enabled, in which case they will still use the
+  original definition).
 
-;; (doc clojure.set/difference)
-;; (source clojure.set/difference)
-;; (meta #'clojure.set/difference)
+  Also replace the values of metadata keys :doc :file :line
+  and :column of orig-var with the corresponding values of those keys
+  from var new-var, using alter-meta!.  Afterwards, and any uses of
+  clojure.repl/doc or clojure.repl/source on orig-var will see the new
+  definition, not the original one."
+  [orig-var new-var]
+  (alter-var-root orig-var (constantly (deref new-var)))
+  (alter-meta! orig-var merge (select-keys (meta new-var)
+                                           [:doc :file :line :column])))
 
-(alter-var-root (var clojure.set/difference) (constantly difference))
-
-;; The alter-meta! call below causes the output of the doc, source,
-;; and meta calls above to change to correspond to those of
-;; funjible-test-project.set/difference.  Doing this will be better
-;; for the sanity of anyone using the output of those calls to
-;; investigate the behavior of the modified clojure.set/difference.
-
-(alter-meta! (var clojure.set/difference)
-             merge (select-keys (meta #'difference)
-                                [:doc :file :line :column]))
+(update-var-val-and-meta #'clojure.set/difference #'difference)
