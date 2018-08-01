@@ -12,5 +12,9 @@
                  ;;[org.clojure/tools.trace "0.7.6"]
                  [criterium "0.4.2"]]
   ;;:profiles {:dev {:dependencies [[funjible "0.2.0"]]}}
+  ;; The default JVM command line options used by Leiningen, if you do
+  ;; not have a `:jvm-opts` value like the one below, lead to much
+  ;; lower performance, because they disable some or most JIT
+  ;; optimizations, with the hope of achieving faster startup times.
   :jvm-opts ^:replace ["-server" "-Xmx1024m"]
   :main funjible-test-project.perf-test)
