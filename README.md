@@ -41,7 +41,7 @@ other OS, virtualization software, and JDK combinations, too, but
 haven't tested other combinations.)
 
 It turns out that `criterium` uses Java's
-[`nanoTime](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#nanoTime--)
+[`nanoTime`](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#nanoTime--)
 method, called just before and just after a sequence of function calls
 that are being measured for run time, to determine the elapsed time
 across that sequence of calls.  I tested in such a VM with a Clojure
