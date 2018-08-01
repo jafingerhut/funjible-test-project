@@ -1,13 +1,68 @@
 # funjible-test-project
 
-A Clojure library designed to ... well, that part is up to you.
+This project was created for these purposes:
+
++ run performance tests on the code in the
+  [funjible](https://github.com/jafingerhut/funjible) library,
+  currently in the namespace `funjible-test-project.perf-test`.
+
++ It was used to test prototypes of some of the functions that became
+  part of the `funjible.set-with-patching` namespace.
+
 
 ## Usage
 
-FIXME
+Run `lein run help` for help on running performance tests.
 
 
-## Sample interaction
+### Observation about long-running performance benchmarks using `criterium` in a VM that you suspend and later resume
+
+Note: It uses the
+[`criterium`](https://github.com/hugoduncan/criterium) to measure the
+run time of several of the functions in `clojure.set` and
+`funjible.set` namespaces with different size sets as arguments.
+
+I was running some of these performance tests in a Linux virtual
+machine with the stack of software below, and was curious whether
+suspending and saving such a VM's state that was in the middle of one
+of these long-running sequences of performance measurements, then
+restoring it later, would throw off the performance results a lot,
+because of the change in system time that occurs on restoring the VM.
+
++ 2015 model MacBook Pro
++ OSX 10.12.6 host OS
++ VirtualBox 5.2.16 r123759
++ Ubuntu 18.04.1 guest OS
++ Oracle JDK 1.8.0_181
+
+(I am recording all of these pieces of the system for completeness
+sake.  I suspect that the behavior described below would be true for
+other OS, virtualization software, and JDK combinations, too, but
+haven't tested other combinations.)
+
+It turns out that `criterium` uses Java's
+[`nanoTime](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#nanoTime--)
+method, called just before and just after a sequence of function calls
+that are being measured for run time, to determine the elapsed time
+across that sequence of calls.  I tested in such a VM with a Clojure
+REPL, calling `(System/nanoTime)` at one time shortly before
+suspending and saving the VM, then waiting about 2 minutes before
+restoring the VM to a running state.  I ran `(System/nanoTime)` again
+shortly after restoring the VM, and subtracted the after-restoring and
+before-suspending results, and compared it to the wall clock time of
+the host machine that had elapsed between the two calls.  The
+difference did _not_ include the time that the VM was suspended, only
+the time that it was running.
+
+So it seems to be that suspending such a VM during a long-running
+collection of performance results should not throw them off, or at
+least not nearly as much as you might expect if the elapsed time was
+calculated by `criterium` by using the system time and date, which
+_does_ have a sudden jump from just before suspending the VM, to
+shortly after restoring it.
+
+
+## Sample interaction for testing "patching" behavior
 
 ```clojure
 (require '[funjible-test-project.core :as c])
@@ -162,7 +217,7 @@ nil
 
 ## License
 
-Copyright © 2018 FIXME
+Copyright © 2018 Andy Fingerhut
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
