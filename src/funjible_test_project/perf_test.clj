@@ -5,6 +5,7 @@
             [clojure.string :as str]
             [clojure.pprint :as pp]
             [funjible.set :as fset]
+            [funjible-test-project.set-speced :as fspeced]
             [clojure.data.avl :as avl]
             [clojure.data.int-map :as imap]
             [criterium.core :as criterium]))
@@ -578,6 +579,8 @@ and col.  Row and col numbers begin at 0."
                           ;; experiments.
                           "funjible.set/"
 
+                          ;;"clojure.set-speced/"
+
                           fn-name)]]
       (print "<hr>\n")
       (print-html-results-with-table-form! benchmark-results table-form
@@ -612,6 +615,7 @@ and col.  Row and col numbers begin at 0."
     Commands to run benchmark tests and record results in files:
     %s short-clojure.set-union-perf
     %s short-funjible.set-union-perf
+    %s short-clojure.set-speced-union-perf
     %s clojure.set-perf
     %s funjible.set-perf
 
@@ -619,7 +623,7 @@ and col.  Row and col numbers begin at 0."
 
     %s report results-file [ results-file ... ]
     %s criterium-report results-file
-" prog-name prog-name prog-name prog-name prog-name prog-name prog-name))
+" prog-name prog-name prog-name prog-name prog-name prog-name prog-name prog-name))
 
 
 (def prog-name "lein run")
@@ -642,6 +646,13 @@ and col.  Row and col numbers begin at 0."
       (with-open [wrtr (io/writer "short-funjible.set-union-results.txt")]
         (run-perf-tests wrtr funjible.set/union "funjible.set/union"
                         short-set-fn-and-descs short-union-results-table-form))
+
+      "short-clojure.set-speced-union-perf"
+      (do
+        (fspeced/instrument-clojure-set-fns)
+        (with-open [wrtr (io/writer "short-clojure.set-speced-union-results.txt")]
+          (run-perf-tests wrtr clojure.set/union "clojure.set-speced/union"
+                          short-set-fn-and-descs short-union-results-table-form)))
 
       "clojure.set-perf"
       (do
@@ -675,7 +686,7 @@ and col.  Row and col numbers begin at 0."
           (iprintf *err* "'report' must be followed by one or more file names\n")
           (System/exit 1))
         (let [dat (mapcat get-bench args)]
-          (print-tables! dat "report.html"))) prog-name
+          (print-tables! dat "report.html")))
 
       "criterium-report"
       (do
